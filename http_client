@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+
+#include <evhttp.h>
+#include <event2/event.h>
+#include <event2/http.h>
+#include <event2/bufferevent.h>
+
+
+
+void 
+http_request_done(struct evhttp_request *req, void *arg)
+{
+    unsigned char buf[1024];
+    int s;
+    int i;
+	  int l;
+	
+  	memset(buf,0,sizeof(buf));
+
+    if (req == NULL) {
+        printf("Connect refused!\n");
+    } else if (req->response_code == 0) {
+        printf("Time out!\n");
+    } else if (req->response_code != 200) {
+        printf("error: %u %s\n", req->response_code, req->response_code_line);
+    } else {
+        printf("success: %u %s\n", req->response_code, req->response_code_line);
+		    s = evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
+        buf[s] = '\0';
+
+    }
+ 
+    event_base_loopbreak((struct event_base *)arg);
+}
+
+
+int
+http_up_data()
+{
+
+    struct event_base *base;
+    struct evhttp_connection *conn;
+    struct evhttp_request *req;
+
+  	unsigned char buf[1024];
+    int  ulen;
+    int  fd;
+	  int i;
+
+	  memset(buf,0,sizeof(buf));
+    fd = open("test.dat",O_RDONLY);
+    ulen = read(fd,buf,1024);
+	  buf[ulen] = '\0';
+
+    base = event_base_new();
+    conn = evhttp_connection_base_new(base, NULL, "192.168.1.100", 8181);
+    req = evhttp_request_new(http_request_done, base);
+
+	
+    evhttp_add_header(req->output_headers, "Host", "localhost");
+    evhttp_add_header(req->output_headers, "Connection", "close");
+
+
+    evbuffer_add(req->output_buffer, &buf, ulen);
+
+    evhttp_make_request(conn, req, EVHTTP_REQ_POST, "/");
+    evhttp_connection_set_timeout(req->evcon, 5);
+	  evhttp_connection_set_retries(conn,5);
+
+	  /* do all the job */
+	  event_base_dispatch(base);
+	
+
+	  evhttp_connection_free(conn);
+	  event_base_free(base);
+    close(fd);
+	
+    return 0;
+}
+
+
+int 
+http_down_cmd()
+{
+    struct event_base *base;
+    struct evhttp_connection *conn;
+    struct evhttp_request *req;
+
+
+    base = event_base_new();
+    conn = evhttp_connection_base_new(base, NULL, "192.168.1.100", 8181);
+    req = evhttp_request_new(http_request_done, base);
+
+    evhttp_add_header(req->output_headers, "Connection", "close");
+    evhttp_add_header(req->output_headers, "Host", "localhost");
+    evhttp_make_request(conn, req, EVHTTP_REQ_GET, "/");
+    evhttp_connection_set_timeout(req->evcon, 5);
+	
+	  event_base_dispatch(base);
+
+  	evhttp_connection_free(conn);
+  	event_base_free(base);
+	
+    return 0;
+}
+
+
+
+int main(int argc, char **argv){
+	
+    while(1){
+
+    http_up_data();
+	  http_down_cmd();
+	  
+    sleep(5);
+	}
+
+
+    return 0;
+	
+}
