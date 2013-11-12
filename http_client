@@ -47,15 +47,15 @@ http_up_data()
     struct evhttp_connection *conn;
     struct evhttp_request *req;
 
-  	unsigned char buf[1024];
+    unsigned char buf[1024];
     int  ulen;
-    int  fd;
-	  int i;
+    int  fd; 
+    int i;
 
-	  memset(buf,0,sizeof(buf));
+    memset(buf,0,sizeof(buf));
     fd = open("test.dat",O_RDONLY);
     ulen = read(fd,buf,1024);
-	  buf[ulen] = '\0';
+    buf[ulen] = '\0';
 
     base = event_base_new();
     conn = evhttp_connection_base_new(base, NULL, "192.168.1.100", 8181);
@@ -70,14 +70,13 @@ http_up_data()
 
     evhttp_make_request(conn, req, EVHTTP_REQ_POST, "/");
     evhttp_connection_set_timeout(req->evcon, 5);
-	  evhttp_connection_set_retries(conn,5);
+    evhttp_connection_set_retries(conn,5);
 
-	  /* do all the job */
-	  event_base_dispatch(base);
+    /* do  the job */
+    event_base_dispatch(base);
 	
-
-	  evhttp_connection_free(conn);
-	  event_base_free(base);
+    evhttp_connection_free(conn);
+    event_base_free(base);
     close(fd);
 	
     return 0;
