@@ -18,9 +18,9 @@ http_request_done(struct evhttp_request *req, void *arg)
     unsigned char buf[1024];
     int s;
     int i;
-	  int l;
+    int l;
 	
-  	memset(buf,0,sizeof(buf));
+    memset(buf,0,sizeof(buf));
 
     if (req == NULL) {
         printf("Connect refused!\n");
@@ -30,7 +30,7 @@ http_request_done(struct evhttp_request *req, void *arg)
         printf("error: %u %s\n", req->response_code, req->response_code_line);
     } else {
         printf("success: %u %s\n", req->response_code, req->response_code_line);
-		    s = evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
+        s = evbuffer_remove(req->input_buffer, &buf, sizeof(buf) - 1);
         buf[s] = '\0';
 
     }
@@ -100,10 +100,9 @@ http_down_cmd()
     evhttp_make_request(conn, req, EVHTTP_REQ_GET, "/");
     evhttp_connection_set_timeout(req->evcon, 5);
 	
-	  event_base_dispatch(base);
-
-  	evhttp_connection_free(conn);
-  	event_base_free(base);
+    event_base_dispatch(base);
+    evhttp_connection_free(conn);
+    event_base_free(base);
 	
     return 0;
 }
@@ -114,11 +113,11 @@ int main(int argc, char **argv){
 	
     while(1){
 
-    http_up_data();
-	  http_down_cmd();
+      http_up_data();
+      http_down_cmd();
 	  
-    sleep(5);
-	}
+      sleep(5);
+    }
 
 
     return 0;
